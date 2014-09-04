@@ -311,6 +311,9 @@
              * @expose
              */
             Util.fetch = function(path, callback) {
+            	
+            	cc.log("loader " + path);
+            	
                 if (callback && typeof callback != 'function')
                     callback = null;
                 if (Util.IS_NODE) {
@@ -328,28 +331,37 @@
                             return null;
                         }
                 } else {
-                    var xhr = Util.XHR();
-                    xhr.open('GET', path, callback ? true : false);
-                    // xhr.setRequestHeader('User-Agent', 'XMLHTTP/1.0');
-                    xhr.setRequestHeader('Accept', 'text/plain');
-                    if (typeof xhr.overrideMimeType === 'function') xhr.overrideMimeType('text/plain');
-                    if (callback) {
-                        xhr.onreadystatechange = function() {
-                            if (xhr.readyState != 4) return;
-                            if (/* remote */ xhr.status == 200 || /* local */ (xhr.status == 0 && typeof xhr.responseText === 'string'))
-                                callback(xhr.responseText);
-                            else
-                                callback(null);
-                        };
-                        if (xhr.readyState == 4)
-                            return;
-                        xhr.send(null);
-                    } else {
-                        xhr.send(null);
-                        if (/* remote */ xhr.status == 200 || /* local */ (xhr.status == 0 && typeof xhr.responseText === 'string'))
-                            return xhr.responseText;
-                        return null;
-                    }
+                	
+                	var data = jsb.fileUtils.getStringFromFile(path);
+                	
+                	if (callback) {
+                		callback(null, data);
+					}else{
+						return data;
+					}
+
+//                    var xhr = Util.XHR();
+//                    xhr.open('GET', path, callback ? true : false);
+//                    // xhr.setRequestHeader('User-Agent', 'XMLHTTP/1.0');
+//                    xhr.setRequestHeader('Accept', 'text/plain');
+//                    if (typeof xhr.overrideMimeType === 'function') xhr.overrideMimeType('text/plain');
+//                    if (callback) {
+//                        xhr.onreadystatechange = function() {
+//                            if (xhr.readyState != 4) return;
+//                            if (/* remote */ xhr.status == 200 || /* local */ (xhr.status == 0 && typeof xhr.responseText === 'string'))
+//                                callback(xhr.responseText);
+//                            else
+//                                callback(null);
+//                        };
+//                        if (xhr.readyState == 4)
+//                            return;
+//                        xhr.send(null);
+//                    } else {
+//                        xhr.send(null);
+//                        if (/* remote */ xhr.status == 200 || /* local */ (xhr.status == 0 && typeof xhr.responseText === 'string'))
+//                            return xhr.responseText;
+//                        return null;
+//                    }
                 }
             };
 
@@ -4074,6 +4086,17 @@
                 callback = null;
             else if (!callback || typeof callback !== 'function')
                 callback = null;
+            
+            if (builder && typeof builder === 'object'){
+            	if (builder.files[filename]){
+            		if (callback) {
+            			callback(null, builder);
+            			return;
+            		}
+            		return builder;
+            	}
+            }
+            
             if (callback)
                 return ProtoBuf.Util.fetch(typeof filename === 'string' ? filename : filename["root"]+"/"+filename["file"], function(contents) {
                     if (contents === null) {
@@ -4157,11 +4180,23 @@
          * @expose
          */
         ProtoBuf.loadJsonFile = function(filename, callback, builder) {
+        	
             if (callback && typeof callback === 'object')
                 builder = callback,
                 callback = null;
             else if (!callback || typeof callback !== 'function')
                 callback = null;
+            
+          	if (builder && typeof builder === 'object'){
+          		if (builder.files[filename]){
+          			if (callback) {
+          				callback(null, builder);
+          				return;
+					}
+          			return builder;
+          		}
+        	}
+        	
             if (callback)
                 return ProtoBuf.Util.fetch(typeof filename === 'string' ? filename : filename["root"]+"/"+filename["file"], function(contents) {
                     if (contents === null) {
